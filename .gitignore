@@ -1,0 +1,60 @@
+# Build output
+bin/
+obj/
+dist/
+build/
+out/
+
+# .NET
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+TestResults/
+.vs/
+
+# Node / React
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# App settings with local secrets
+appsettings.Development.json
+appsettings.Local.json
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# SQL Server / database files
+*.mdf
+*.ldf
+*.db
+*.sqlite
+*.sqlite3
+
+# Coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+*.lscache
