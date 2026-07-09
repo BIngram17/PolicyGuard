@@ -24,7 +24,7 @@ public class PolicyAnalyzerServiceTests
         Assert.Equal("Passed", result.ResultStatus);
         Assert.Equal(20.0, result.Score);
         Assert.Equal("incident, response, owner", result.MatchedText);
-        Assert.Contains("addressed", result.Recommendation, StringComparison.OrdinalIgnoreCase);
+        AssertContainsIgnoringCase(result.Recommendation, "addressed");
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class PolicyAnalyzerServiceTests
         Assert.Equal("Needs Review", result.ResultStatus);
         Assert.Equal(15.0, result.Score);
         Assert.Equal("access", result.MatchedText);
-        Assert.Contains("may need more detail", result.Recommendation, StringComparison.OrdinalIgnoreCase);
+        AssertContainsIgnoringCase(result.Recommendation, "may need more detail");
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public class PolicyAnalyzerServiceTests
         Assert.Equal(0.0, result.Score);
         Assert.Equal(string.Empty, result.MatchedText);
         Assert.Contains("Data Retention", result.Recommendation);
-        Assert.Contains("data retention rules", result.Recommendation, StringComparison.OrdinalIgnoreCase);
+        AssertContainsIgnoringCase(result.Recommendation, "data retention rules");
     }
 
     [Fact]
@@ -160,6 +160,15 @@ public class PolicyAnalyzerServiceTests
         var score = _service.CalculateOverallScore(results, checklistItems);
 
         Assert.Equal(66.67, score);
+    }
+
+    private static void AssertContainsIgnoringCase(string actual, string expectedSubstring)
+    {
+        // Keep the assertion compatible with the xUnit version used by the CI runner.
+        // The BCL string comparison overload is stable across current .NET versions.
+        Assert.True(
+            actual.Contains(expectedSubstring, StringComparison.OrdinalIgnoreCase),
+            $"Expected '{actual}' to contain '{expectedSubstring}' ignoring case.");
     }
 
     private static ChecklistItem CreateChecklistItem(
