@@ -8,6 +8,15 @@ using PolicyGuard.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var allowedOrigins = ResolveAllowedOrigins(builder.Configuration, builder.Environment);
+var jwtKey = builder.Configuration["Jwt:Key"];
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException(
+        "JWT key is missing. Set Jwt:Key locally or Jwt__Key as a cloud app setting.");
+}
+
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<PolicyGuardDbContext>(options =>
@@ -17,13 +26,6 @@ builder.Services.AddScoped<PolicyAnalyzerService>();
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<JwtTokenService>();
-
-var jwtKey = builder.Configuration["Jwt:Key"];
-
-if (string.IsNullOrWhiteSpace(jwtKey))
-{
-    throw new InvalidOperationException("JWT key is missing from configuration.");
-}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -52,12 +54,23 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy =>
+    options.AddPolicy("AllowConfiguredOrigins", policy =>
     {
-        policy
-            .WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        // Enterprise deployments should explicitly list the frontend URL.
+        // In Azure App Service, set Cors__AllowedOrigins__0=https://your-frontend-url.
+        if (allowedOrigins.Length > 0)
+        {
+            policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+
+            return;
+        }
+
+        // No origins means browser CORS requests are denied by default.
+        // This is intentionally safer than allowing every origin in production.
+        policy.AllowAnyHeader().AllowAnyMethod();
     });
 });
 
@@ -100,9 +113,12 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-app.UseCors("AllowReactApp");
+app.UseCors("AllowConfiguredOrigins");
 
-if (app.Environment.IsDevelopment())
+var swaggerEnabled = app.Environment.IsDevelopment()
+    || string.Equals(builder.Configuration["Swagger:Enabled"], "true", StringComparison.OrdinalIgnoreCase);
+
+if (swaggerEnabled)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -111,6 +127,35 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/health", () => Results.Ok(new
+{
+    service = "PolicyGuard.Api",
+    status = "Healthy",
+    environment = app.Environment.EnvironmentName,
+    timestampUtc = DateTimeOffset.UtcNow
+}));
+
 app.MapControllers();
 
 app.Run();
+
+static string[] ResolveAllowedOrigins(IConfiguration configuration, IWebHostEnvironment environment)
+{
+    var configuredOrigins = configuration
+        .GetSection("Cors:AllowedOrigins")
+        .GetChildren()
+        .Select(child => child.Value)
+        .Where(value => !string.IsNullOrWhiteSpace(value))
+        .Select(value => value!.Trim().TrimEnd('/'))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    if (configuredOrigins.Length > 0)
+    {
+        return configuredOrigins;
+    }
+
+    return environment.IsDevelopment()
+        ? new[] { "http://localhost:5173" }
+        : Array.Empty<string>();
+}

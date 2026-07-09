@@ -2,7 +2,20 @@
 
 PolicyGuard is a full-stack compliance review application built with ASP.NET Core, SQL Server, Entity Framework Core, JWT authentication, role-based access control, and React. The application allows users to create compliance checklist templates, analyze policy/procedure text against those checklists, review compliance results, generate exportable reports, and track system activity through an audit trail.
 
-This project was built as a portfolio application to demonstrate full-stack software development, secure API design, CRUD operations, authentication, audit logging, SQL Server integration, and a polished React user interface.
+This project demonstrates full-stack software development, secure API design, CRUD operations, authentication, audit logging, SQL Server integration, automated unit testing, Docker readiness, and GitHub Actions CI/CD.
+
+---
+
+## Enterprise Upgrade Highlights
+
+- xUnit test project for backend business logic and security-sensitive password behavior
+- GitHub Actions CI pipeline for backend restore/build/test, frontend build, and Docker image validation
+- Azure-ready deployment workflow for the API and frontend
+- Environment-driven production configuration
+- Production-safe JWT, CORS, and connection string handling
+- API `/health` endpoint for cloud health checks
+- Dockerfile for containerized API deployment
+- Deployment guide in `docs/DEPLOYMENT.md`
 
 ---
 
@@ -20,7 +33,7 @@ This project was built as a portfolio application to demonstrate full-stack soft
 - Downloadable text report
 - Audit trail for login, review, checklist, delete, and export events
 - Audit search, filters, sorting, and refresh tracking
-- Swagger API documentation
+- Swagger API documentation in development
 - SQL Server persistence with Entity Framework Core
 
 ---
@@ -32,9 +45,11 @@ This project was built as a portfolio application to demonstrate full-stack soft
 - C#
 - ASP.NET Core Web API
 - Entity Framework Core
-- SQL Server Express
+- SQL Server / Azure SQL
 - JWT Authentication
+- xUnit
 - Swagger / OpenAPI
+- Docker
 
 ### Frontend
 
@@ -44,12 +59,12 @@ This project was built as a portfolio application to demonstrate full-stack soft
 - Axios
 - CSS
 
-### Tools
+### DevOps
 
-- Visual Studio Code
-- SQL Server Express
-- Swagger UI
-- Git / GitHub
+- GitHub Actions
+- Azure App Service
+- Azure Static Web Apps
+- Docker
 
 ---
 
@@ -148,10 +163,197 @@ Main API areas:
 - `/api/PolicyReviews`
 - `/api/Dashboard`
 - `/api/AuditLogs`
+- `/health`
 
-The API is documented through Swagger.
+The API is documented through Swagger in development.
 
-![Swagger API](screenshots/swagger-api.png)
+---
+
+## Local Development Setup
+
+### Prerequisites
+
+Install the following before running the project:
+
+- .NET 9 SDK
+- Node.js 22+
+- SQL Server Express
+- Docker Desktop, optional but recommended
+- Visual Studio Code or Visual Studio
+
+### Backend Setup
+
+Navigate to the backend project:
+
+```bash
+cd backend/PolicyGuard.Api
+```
+
+Restore dependencies:
+
+```bash
+dotnet restore
+```
+
+Apply EF Core migrations:
+
+```bash
+dotnet ef database update
+```
+
+Run the API:
+
+```bash
+dotnet run
+```
+
+The API runs locally using `appsettings.Development.json`.
+
+### Frontend Setup
+
+Navigate to the frontend project:
+
+```bash
+cd frontend/policyguard-client
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the React app:
+
+```bash
+npm run dev
+```
+
+By default, the frontend calls:
+
+```text
+http://localhost:5069/api
+```
+
+For deployed environments, set:
+
+```text
+VITE_API_BASE_URL=https://your-policyguard-api.azurewebsites.net/api
+```
+
+---
+
+## Running Tests
+
+Run backend xUnit tests:
+
+```bash
+dotnet test backend/PolicyGuard.Api.Tests/PolicyGuard.Api.Tests.csproj
+```
+
+The test suite currently covers:
+
+- Policy analyzer pass/needs-review/missing logic
+- Keyword trimming and case-insensitive matching
+- Weighted compliance score calculation
+- Score rounding
+- Zero-weight checklist behavior
+- Password hashing format
+- Password verification success/failure paths
+- Invalid stored password hash handling
+- Unique password salts
+
+---
+
+## CI/CD
+
+This repository includes a GitHub Actions workflow at:
+
+```text
+.github/workflows/ci-cd.yml
+```
+
+The pipeline runs on pull requests and pushes to `main`.
+
+It performs:
+
+- Backend restore
+- Backend release build
+- xUnit test execution
+- Test result artifact upload
+- API Docker image build validation
+- Frontend dependency install
+- Frontend production build
+- Azure API deployment when Azure secrets are configured
+- Azure Static Web Apps frontend deployment when Azure secrets are configured
+
+See `docs/DEPLOYMENT.md` for cloud setup instructions.
+
+---
+
+## Docker
+
+Build the API image from the repository root:
+
+```bash
+docker build -f backend/PolicyGuard.Api/Dockerfile -t policyguard-api:local .
+```
+
+Run the API container:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  -e Jwt__Key="replace-with-a-long-local-test-secret" \
+  -e ConnectionStrings__DefaultConnection="<your-connection-string>" \
+  -e Cors__AllowedOrigins__0="http://localhost:5173" \
+  policyguard-api:local
+```
+
+Check the health endpoint:
+
+```bash
+curl http://localhost:8080/health
+```
+
+---
+
+## Deployment
+
+The recommended cloud deployment is:
+
+- API: Azure App Service
+- Frontend: Azure Static Web Apps
+- Database: Azure SQL Database
+- Automation: GitHub Actions
+
+Required GitHub repository variables:
+
+```text
+AZURE_WEBAPP_NAME
+VITE_API_BASE_URL
+```
+
+Required GitHub repository secrets:
+
+```text
+AZURE_WEBAPP_PUBLISH_PROFILE
+AZURE_STATIC_WEB_APPS_API_TOKEN
+```
+
+Required Azure App Service settings:
+
+```text
+ASPNETCORE_ENVIRONMENT=Production
+Jwt__Key=<production-secret>
+Jwt__Issuer=PolicyGuard
+Jwt__Audience=PolicyGuardClient
+Jwt__ExpirationMinutes=480
+Cors__AllowedOrigins__0=https://<frontend-url>
+Swagger__Enabled=false
+```
+
+See `docs/DEPLOYMENT.md` for the full deployment checklist.
 
 ---
 
@@ -167,22 +369,9 @@ The API is documented through Swagger.
 
 ---
 
-## Local Development Setup
+## Resume-Ready Talking Points
 
-### Prerequisites
-
-Install the following before running the project:
-
-- .NET 9 SDK
-- Node.js
-- SQL Server Express
-- Visual Studio Code or Visual Studio
-
----
-
-## Backend Setup
-
-Navigate to the backend project:
-
-```bash
-cd backend/PolicyGuard.Api
+- Built a full-stack compliance analyzer with ASP.NET Core, React, SQL Server, JWT authentication, RBAC, and audit logging.
+- Added xUnit unit tests for backend business logic, weighted scoring behavior, password hashing, password verification, and invalid hash handling.
+- Built a GitHub Actions CI/CD pipeline that runs backend tests, validates frontend production builds, builds a Docker image, and deploys to Azure when cloud secrets are configured.
+- Refactored production configuration to use environment variables for JWT secrets, SQL connection strings, CORS origins, and frontend API endpoints.

@@ -1,6 +1,13 @@
 import axios from "axios";
 
-export const API_BASE_URL = "http://localhost:5069/api";
+const DEFAULT_API_BASE_URL = "http://localhost:5069/api";
+
+// Vite exposes browser-safe build-time environment variables through import.meta.env.
+// In production, set VITE_API_BASE_URL to the deployed API URL, for example:
+// https://policyguard-api.azurewebsites.net/api
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL
+).replace(/\/$/, "");
 
 function getAuthHeaders(authData) {
   if (!authData?.token) {
