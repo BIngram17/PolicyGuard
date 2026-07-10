@@ -9,10 +9,8 @@ The application allows users to log in by role, create compliance checklist temp
 ## Live Deployment
 
 - **Frontend:** https://zealous-field-0e465511e.7.azurestaticapps.net
-- **Backend API:** https://policyguard-api-brianingram-etbkhmgycua8crgg.westus3-01.azurewebsites.net
-- **API Health Check:** https://policyguard-api-brianingram-etbkhmgycua8crgg.westus3-01.azurewebsites.net/health
 
-The deployed system uses Azure Static Web Apps for the React frontend and Azure App Service for the ASP.NET Core Web API.
+The deployed system uses Azure Static Web Apps for the React frontend and an Azure-hosted ASP.NET Core Web API behind the application. The README intentionally lists only the user-facing frontend URL.
 
 ---
 
@@ -28,7 +26,6 @@ The deployed system uses Azure Static Web Apps for the React frontend and Azure 
 - xUnit test project for backend business logic and password behavior
 - GitHub Actions CI/CD pipeline for backend build/test, frontend build, Docker validation, and Azure deployment
 - Dockerfile for API container build validation
-- API `/health` endpoint for deployment verification
 - Deployment guide in `docs/DEPLOYMENT.md`
 
 ---
@@ -181,7 +178,6 @@ Main API areas:
 - `/api/PolicyReviews`
 - `/api/Dashboard`
 - `/api/AuditLogs`
-- `/health`
 
 The API is documented through Swagger when enabled in development or debugging environments.
 
@@ -372,12 +368,6 @@ docker run --rm -p 8080:8080 \
   -e ConnectionStrings__DefaultConnection="<your-connection-string>" \
   -e Cors__AllowedOrigins__0="http://localhost:5173" \
   policyguard-api:local
-```
-
-Check the health endpoint:
-
-```bash
-curl http://localhost:8080/health
 ```
 
 ---
