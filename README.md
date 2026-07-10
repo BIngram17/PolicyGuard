@@ -1,20 +1,34 @@
 # PolicyGuard Compliance Analyzer
 
-PolicyGuard is a full-stack compliance review application built with ASP.NET Core, SQL Server, Entity Framework Core, JWT authentication, role-based access control, and React. The application allows users to create compliance checklist templates, analyze policy/procedure text against those checklists, review compliance results, generate exportable reports, and track system activity through an audit trail.
+PolicyGuard is a deployed full-stack compliance review application built with ASP.NET Core, React, SQL Server/Azure SQL, Entity Framework Core, JWT authentication, role-based access control, audit logging, and Azure cloud deployment.
 
-This project demonstrates full-stack software development, secure API design, CRUD operations, authentication, audit logging, SQL Server integration, automated unit testing, Docker readiness, and GitHub Actions CI/CD.
+The application allows users to log in by role, create compliance checklist templates, analyze policy or procedure text against structured requirements, review compliance results, generate report-style output, and track user activity through an audit trail.
+
+---
+
+## Live Deployment
+
+- **Frontend:** https://zealous-field-0e465511e.7.azurestaticapps.net
+- **Backend API:** https://policyguard-api-brianingram-etbkhmgycua8crgg.westus3-01.azurewebsites.net
+- **API Health Check:** https://policyguard-api-brianingram-etbkhmgycua8crgg.westus3-01.azurewebsites.net/health
+
+The deployed system uses Azure Static Web Apps for the React frontend and Azure App Service for the ASP.NET Core Web API.
 
 ---
 
 ## Enterprise Upgrade Highlights
 
-- xUnit test project for backend business logic and security-sensitive password behavior
-- GitHub Actions CI pipeline for backend restore/build/test, frontend build, and Docker image validation
-- Azure-ready deployment workflow for the API and frontend
-- Environment-driven production configuration
-- Production-safe JWT, CORS, and connection string handling
-- API `/health` endpoint for cloud health checks
-- Dockerfile for containerized API deployment
+- Deployed frontend on Azure Static Web Apps
+- Deployed ASP.NET Core API on Azure App Service
+- Production API configuration through Azure App Service environment variables
+- Vite frontend environment configuration through GitHub Actions variables
+- SQL Server / Azure SQL persistence with Entity Framework Core
+- JWT-based authentication and role-based access control
+- Audit trail for login, review, checklist, delete, and export activity
+- xUnit test project for backend business logic and password behavior
+- GitHub Actions CI/CD pipeline for backend build/test, frontend build, Docker validation, and Azure deployment
+- Dockerfile for API container build validation
+- API `/health` endpoint for deployment verification
 - Deployment guide in `docs/DEPLOYMENT.md`
 
 ---
@@ -33,7 +47,7 @@ This project demonstrates full-stack software development, secure API design, CR
 - Downloadable text report
 - Audit trail for login, review, checklist, delete, and export events
 - Audit search, filters, sorting, and refresh tracking
-- Swagger API documentation in development
+- Swagger API documentation in development/debug mode
 - SQL Server persistence with Entity Framework Core
 
 ---
@@ -47,6 +61,7 @@ This project demonstrates full-stack software development, secure API design, CR
 - Entity Framework Core
 - SQL Server / Azure SQL
 - JWT Authentication
+- Role-Based Access Control
 - xUnit
 - Swagger / OpenAPI
 - Docker
@@ -58,13 +73,16 @@ This project demonstrates full-stack software development, secure API design, CR
 - JavaScript
 - Axios
 - CSS
+- Responsive UI
 
-### DevOps
+### Cloud and DevOps
 
-- GitHub Actions
 - Azure App Service
 - Azure Static Web Apps
-- Docker
+- GitHub Actions
+- Azure environment variables
+- Docker build validation
+- CI/CD deployment workflow
 
 ---
 
@@ -165,7 +183,7 @@ Main API areas:
 - `/api/AuditLogs`
 - `/health`
 
-The API is documented through Swagger in development.
+The API is documented through Swagger when enabled in development or debugging environments.
 
 ---
 
@@ -204,10 +222,14 @@ dotnet ef database update
 Run the API:
 
 ```bash
-dotnet run
+dotnet run --launch-profile http
 ```
 
-The API runs locally using `appsettings.Development.json`.
+The local API runs at:
+
+```text
+http://localhost:5069
+```
 
 ### Frontend Setup
 
@@ -229,7 +251,7 @@ Run the React app:
 npm run dev
 ```
 
-By default, the frontend calls:
+By default, the local frontend calls:
 
 ```text
 http://localhost:5069/api
@@ -239,6 +261,74 @@ For deployed environments, set:
 
 ```text
 VITE_API_BASE_URL=https://your-policyguard-api.azurewebsites.net/api
+```
+
+---
+
+## Azure Deployment Configuration
+
+### Backend App Service Settings
+
+The Azure App Service API uses environment variables for production configuration:
+
+```text
+ASPNETCORE_ENVIRONMENT=Production
+Jwt__Key=<production-jwt-secret>
+Jwt__Issuer=PolicyGuard
+Jwt__Audience=PolicyGuardClient
+Jwt__ExpirationMinutes=480
+Cors__AllowedOrigins__0=<frontend-origin-url>
+Swagger__Enabled=false
+```
+
+`Swagger__Enabled` can be temporarily set to `true` while debugging, then set back to `false` after deployment verification.
+
+### Frontend Build Variable
+
+The React frontend reads its API URL at build time through Vite:
+
+```text
+VITE_API_BASE_URL=<backend-api-url>/api
+```
+
+Because this value is baked into the production build, the frontend must be rebuilt and redeployed after changing it.
+
+---
+
+## GitHub Actions CI/CD
+
+The repository includes a CI/CD workflow at:
+
+```text
+.github/workflows/ci-cd.yml
+```
+
+The pipeline runs on pull requests and pushes to `main`.
+
+It performs:
+
+- Backend restore
+- Backend release build
+- xUnit test execution
+- Test result artifact upload
+- API Docker image build validation
+- Frontend dependency install
+- Frontend production build
+- Azure API deployment when Azure settings are configured
+- Azure Static Web Apps frontend deployment when Azure settings are configured
+
+Required GitHub repository variables:
+
+```text
+AZURE_WEBAPP_NAME=<azure-app-service-name>
+VITE_API_BASE_URL=<backend-api-url>/api
+```
+
+Required GitHub repository secrets:
+
+```text
+AZURE_WEBAPP_PUBLISH_PROFILE
+AZURE_STATIC_WEB_APPS_API_TOKEN
 ```
 
 ---
@@ -262,32 +352,6 @@ The test suite currently covers:
 - Password verification success/failure paths
 - Invalid stored password hash handling
 - Unique password salts
-
----
-
-## CI/CD
-
-This repository includes a GitHub Actions workflow at:
-
-```text
-.github/workflows/ci-cd.yml
-```
-
-The pipeline runs on pull requests and pushes to `main`.
-
-It performs:
-
-- Backend restore
-- Backend release build
-- xUnit test execution
-- Test result artifact upload
-- API Docker image build validation
-- Frontend dependency install
-- Frontend production build
-- Azure API deployment when Azure secrets are configured
-- Azure Static Web Apps frontend deployment when Azure secrets are configured
-
-See `docs/DEPLOYMENT.md` for cloud setup instructions.
 
 ---
 
@@ -318,45 +382,6 @@ curl http://localhost:8080/health
 
 ---
 
-## Deployment
-
-The recommended cloud deployment is:
-
-- API: Azure App Service
-- Frontend: Azure Static Web Apps
-- Database: Azure SQL Database
-- Automation: GitHub Actions
-
-Required GitHub repository variables:
-
-```text
-AZURE_WEBAPP_NAME
-VITE_API_BASE_URL
-```
-
-Required GitHub repository secrets:
-
-```text
-AZURE_WEBAPP_PUBLISH_PROFILE
-AZURE_STATIC_WEB_APPS_API_TOKEN
-```
-
-Required Azure App Service settings:
-
-```text
-ASPNETCORE_ENVIRONMENT=Production
-Jwt__Key=<production-secret>
-Jwt__Issuer=PolicyGuard
-Jwt__Audience=PolicyGuardClient
-Jwt__ExpirationMinutes=480
-Cors__AllowedOrigins__0=https://<frontend-url>
-Swagger__Enabled=false
-```
-
-See `docs/DEPLOYMENT.md` for the full deployment checklist.
-
----
-
 ## Example Workflow
 
 1. Admin logs in.
@@ -371,7 +396,14 @@ See `docs/DEPLOYMENT.md` for the full deployment checklist.
 
 ## Resume-Ready Talking Points
 
-- Built a full-stack compliance analyzer with ASP.NET Core, React, SQL Server, JWT authentication, RBAC, and audit logging.
+- Built and deployed a full-stack compliance analyzer with ASP.NET Core, React, SQL Server/Azure SQL, JWT authentication, RBAC, reporting, and audit logging.
+- Deployed the frontend to Azure Static Web Apps and the API to Azure App Service using GitHub Actions CI/CD.
+- Configured production environment variables for JWT signing, CORS, API routing, and frontend build-time API configuration.
 - Added xUnit unit tests for backend business logic, weighted scoring behavior, password hashing, password verification, and invalid hash handling.
-- Built a GitHub Actions CI/CD pipeline that runs backend tests, validates frontend production builds, builds a Docker image, and deploys to Azure when cloud secrets are configured.
-- Refactored production configuration to use environment variables for JWT secrets, SQL connection strings, CORS origins, and frontend API endpoints.
+- Built a CI/CD pipeline that runs backend tests, validates frontend production builds, builds a Docker image, and deploys to Azure when cloud secrets are configured.
+
+---
+
+## Security Notes
+
+This is a portfolio project. Demo access should be shared selectively. Production systems should use stronger account management, secret rotation, HTTPS-only settings, secure database firewall rules, and external identity providers where appropriate.
