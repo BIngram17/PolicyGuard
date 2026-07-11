@@ -113,6 +113,10 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// Seed portfolio-ready default checklist templates at startup.
+// This is safe to run repeatedly because the seeder checks for existing checklist names.
+await SeedDefaultChecklistsAsync(app);
+
 app.UseCors("AllowConfiguredOrigins");
 
 var swaggerEnabled = app.Environment.IsDevelopment()
@@ -138,6 +142,23 @@ app.MapGet("/health", () => Results.Ok(new
 app.MapControllers();
 
 app.Run();
+
+static async Task SeedDefaultChecklistsAsync(WebApplication app)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<PolicyGuardDbContext>();
+
+        await DefaultChecklistSeeder.SeedAsync(context);
+    }
+    catch (Exception ex)
+    {
+        // Seeding should not prevent the API from starting. If the database is temporarily
+        // unavailable during startup, the existing app routes should still remain reachable.
+        app.Logger.LogError(ex, "Default checklist seeding failed.");
+    }
+}
 
 static string[] ResolveAllowedOrigins(IConfiguration configuration, IWebHostEnvironment environment)
 {
