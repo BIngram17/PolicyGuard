@@ -9,8 +9,9 @@ The application allows users to log in by role, create compliance checklist temp
 ## Live Deployment
 
 - **Frontend:** https://zealous-field-0e465511e.7.azurestaticapps.net
+- **Backend Health Check:** https://policyguard-api-brianingram-etbkhmgycua8crgg.westus3-01.azurewebsites.net/health
 
-The deployed system uses Azure Static Web Apps for the React frontend and an Azure-hosted ASP.NET Core Web API behind the application. The README intentionally lists only the user-facing frontend URL.
+The deployed system uses Azure Static Web Apps for the React frontend and Azure App Service for the ASP.NET Core Web API. The public health check is exposed so the API deployment can be verified without requiring authentication.
 
 ---
 
@@ -26,6 +27,8 @@ The deployed system uses Azure Static Web Apps for the React frontend and an Azu
 - xUnit test project for backend business logic and password behavior
 - GitHub Actions CI/CD pipeline for backend build/test, frontend build, Docker validation, and Azure deployment
 - Dockerfile for API container build validation
+- Public `/health` endpoint for Azure App Service health checks and deployment verification
+- Startup seeding for default compliance checklist templates
 - Deployment guide in `docs/DEPLOYMENT.md`
 
 ---
@@ -36,6 +39,7 @@ The deployed system uses Azure Static Web Apps for the React frontend and an Azu
 - Role-based access control
 - Admin, Reviewer, and Auditor user roles
 - Compliance checklist creation, viewing, editing, and deletion
+- Seeded checklist templates for IT policy, SDLC documentation, change management, data privacy/retention, and incident response reviews
 - Policy/procedure analysis against checklist requirements
 - Saved policy review archive
 - Search, filter, and sort controls for saved reviews
@@ -46,6 +50,20 @@ The deployed system uses Azure Static Web Apps for the React frontend and an Azu
 - Audit search, filters, sorting, and refresh tracking
 - Swagger API documentation in development/debug mode
 - SQL Server persistence with Entity Framework Core
+
+---
+
+## Default Checklist Templates
+
+PolicyGuard includes default templates that demonstrate how the analyzer can review different types of compliance and governance documents.
+
+| Checklist | Category | Purpose |
+|---|---|---|
+| IT Policy Checklist | Information Technology | Reviews IT policies for governance, access control, security, data handling, approval, enforcement, and revision history. |
+| SDLC Documentation Checklist | Software Development | Reviews software project documentation for requirements, technical design, testing, UAT, deployment, maintenance, risk, and signoff coverage. |
+| Change Management Checklist | Change Management | Reviews change requests for business justification, risk, impact, rollback, testing, communication, approval, and post-change validation. |
+| Data Privacy and Retention Checklist | Data Governance | Reviews data policies for classification, ownership, collection purpose, access restrictions, retention, disposal, privacy, compliance, breach notification, and review schedule. |
+| Incident Response Checklist | Security Operations | Reviews incident response policies for reporting, severity, roles, escalation, containment, communication, recovery, documentation, and post-incident review. |
 
 ---
 
@@ -169,7 +187,7 @@ Auditors cannot create policy reviews or modify checklist templates.
 
 ## API Overview
 
-PolicyGuard exposes REST API endpoints for authentication, checklist management, policy review analysis, dashboard summaries, and audit logging.
+PolicyGuard exposes REST API endpoints for authentication, checklist management, policy review analysis, dashboard summaries, audit logging, and deployment health checks.
 
 Main API areas:
 
@@ -178,6 +196,9 @@ Main API areas:
 - `/api/PolicyReviews`
 - `/api/Dashboard`
 - `/api/AuditLogs`
+- `/health`
+
+The `/health` endpoint is anonymous and returns a lightweight status response for Azure App Service health checks and deployment verification.
 
 The API is documented through Swagger when enabled in development or debugging environments.
 
@@ -225,6 +246,12 @@ The local API runs at:
 
 ```text
 http://localhost:5069
+```
+
+Local health check:
+
+```text
+http://localhost:5069/health
 ```
 
 ### Frontend Setup
@@ -278,6 +305,16 @@ Swagger__Enabled=false
 ```
 
 `Swagger__Enabled` can be temporarily set to `true` while debugging, then set back to `false` after deployment verification.
+
+### Azure App Service Health Check
+
+Azure App Service health check should use the path:
+
+```text
+/health
+```
+
+Diagnostic collection is not required for normal portfolio operation. It should only be enabled temporarily when troubleshooting repeated crashes, memory issues, or unhealthy App Service instances.
 
 ### Frontend Build Variable
 
@@ -370,6 +407,12 @@ docker run --rm -p 8080:8080 \
   policyguard-api:local
 ```
 
+Container health check:
+
+```text
+http://localhost:8080/health
+```
+
 ---
 
 ## Example Workflow
@@ -388,7 +431,8 @@ docker run --rm -p 8080:8080 \
 
 - Built and deployed a full-stack compliance analyzer with ASP.NET Core, React, SQL Server/Azure SQL, JWT authentication, RBAC, reporting, and audit logging.
 - Deployed the frontend to Azure Static Web Apps and the API to Azure App Service using GitHub Actions CI/CD.
-- Configured production environment variables for JWT signing, CORS, API routing, and frontend build-time API configuration.
+- Configured production environment variables for JWT signing, CORS, API routing, Azure health checks, and frontend build-time API configuration.
+- Added seeded checklist templates for IT policy, SDLC documentation, change management, data privacy/retention, and incident response review workflows.
 - Added xUnit unit tests for backend business logic, weighted scoring behavior, password hashing, password verification, and invalid hash handling.
 - Built a CI/CD pipeline that runs backend tests, validates frontend production builds, builds a Docker image, and deploys to Azure when cloud secrets are configured.
 
