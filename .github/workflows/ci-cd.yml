@@ -76,6 +76,7 @@ jobs:
         working-directory: frontend/policyguard-client
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_DEMO_EMAIL: ${{ vars.VITE_DEMO_EMAIL }}
         run: npm run build
 
   deploy-api:
@@ -126,6 +127,7 @@ jobs:
     env:
       AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      VITE_DEMO_EMAIL: ${{ vars.VITE_DEMO_EMAIL }}
 
     steps:
       - name: Checkout repository

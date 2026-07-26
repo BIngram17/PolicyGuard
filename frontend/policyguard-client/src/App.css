@@ -1282,6 +1282,44 @@ textarea {
   gap: 16px;
 }
 
+.demo-access-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #bfdbfe;
+  border-radius: 18px;
+  background: #eff6ff;
+}
+
+.demo-access-card h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.05rem;
+}
+
+.demo-access-card p:not(.eyebrow) {
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.demo-access-card button {
+  width: 100%;
+  overflow-wrap: anywhere;
+  border: 1px solid #93c5fd;
+  border-radius: 12px;
+  padding: 11px 14px;
+  background: white;
+  color: #1d4ed8;
+  font-weight: 900;
+}
+
+.demo-access-card button:hover {
+  border-color: #1d4ed8;
+  background: #dbeafe;
+}
+
 .demo-users {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

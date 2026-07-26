@@ -441,3 +441,9 @@ http://localhost:8080/health
 ## Security Notes
 
 This is a portfolio project. Demo access should be shared selectively. Production systems should use stronger account management, secret rotation, HTTPS-only settings, secure database firewall rules, and external identity providers where appropriate.
+
+For recruiter access, PolicyGuard supports an environment-configured portfolio
+demo account with the least-privilege `Reviewer` role. See
+`docs/DEPLOYMENT.md#sharing-portfolio-access` for setup, password rotation, and
+credential-sharing guidance. The demo password is never committed or exposed in
+the frontend bundle, and public self-registration is disabled.

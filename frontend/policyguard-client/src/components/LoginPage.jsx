@@ -6,6 +6,12 @@ function LoginPage({
   error,
   successMessage,
 }) {
+  const demoEmail = import.meta.env.VITE_DEMO_EMAIL?.trim();
+
+  const useDemoEmail = () => {
+    setLoginForm({ ...loginForm, email: demoEmail });
+  };
+
   return (
     <div className="login-page">
       <section className="login-card">
@@ -26,6 +32,23 @@ function LoginPage({
           </p>
         </div>
 
+        {demoEmail && (
+          <aside className="demo-access-card">
+            <div>
+              <p className="eyebrow">Portfolio Demo</p>
+              <h3>Recruiter and hiring manager access</h3>
+              <p>
+                Use the shared demo password with the Reviewer account below.
+                This role can explore reviews, run an analysis, and generate
+                reports without administrative access.
+              </p>
+            </div>
+            <button type="button" onClick={useDemoEmail}>
+              Use {demoEmail}
+            </button>
+          </aside>
+        )}
+
         {error && <div className="error-banner">{error}</div>}
         {successMessage && <div className="success-banner">{successMessage}</div>}
 
@@ -34,6 +57,8 @@ function LoginPage({
             Email
             <input
               type="email"
+              autoComplete="username"
+              required
               value={loginForm.email}
               onChange={(event) =>
                 setLoginForm({ ...loginForm, email: event.target.value })
@@ -45,6 +70,8 @@ function LoginPage({
             Password
             <input
               type="password"
+              autoComplete="current-password"
+              required
               value={loginForm.password}
               onChange={(event) =>
                 setLoginForm({ ...loginForm, password: event.target.value })

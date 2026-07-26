@@ -116,6 +116,7 @@ var app = builder.Build();
 // Seed portfolio-ready default checklist templates at startup.
 // This is safe to run repeatedly because the seeder checks for existing checklist names.
 await SeedDefaultChecklistsAsync(app);
+await SeedPortfolioDemoAccountAsync(app);
 
 app.UseCors("AllowConfiguredOrigins");
 
@@ -157,6 +158,26 @@ static async Task SeedDefaultChecklistsAsync(WebApplication app)
         // Seeding should not prevent the API from starting. If the database is temporarily
         // unavailable during startup, the existing app routes should still remain reachable.
         app.Logger.LogError(ex, "Default checklist seeding failed.");
+    }
+}
+
+static async Task SeedPortfolioDemoAccountAsync(WebApplication app)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<PolicyGuardDbContext>();
+        var passwordService = scope.ServiceProvider.GetRequiredService<PasswordService>();
+
+        await PortfolioDemoAccountSeeder.SeedAsync(
+            context,
+            passwordService,
+            app.Configuration,
+            app.Logger);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Portfolio demo account provisioning failed.");
     }
 }
 
