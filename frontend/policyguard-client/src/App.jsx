@@ -100,6 +100,14 @@ function App() {
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    });
+  }, [activePage, selectedReview?.id, selectedChecklist?.id]);
+
   function handleAuthError(err) {
     if (err.response?.status === 401) {
       handleLogout();
