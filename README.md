@@ -447,3 +447,7 @@ demo account with the least-privilege `Reviewer` role. See
 `docs/DEPLOYMENT.md#sharing-portfolio-access` for setup, password rotation, and
 credential-sharing guidance. The demo password is never committed or exposed in
 the frontend bundle, and public self-registration is disabled.
+
+Resume links can optionally use an Azure-configured opaque access token in the
+URL fragment. The visitor still sees the login screen and presses Sign In, while
+the real demo password remains outside the URL and browser bundle.

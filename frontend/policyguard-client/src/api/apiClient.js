@@ -24,6 +24,10 @@ export const apiClient = {
     return axios.post(`${API_BASE_URL}/Auth/login`, credentials);
   },
 
+  demoLogin(accessToken) {
+    return axios.post(`${API_BASE_URL}/Auth/demo-login`, { accessToken });
+  },
+
   getDashboard(authData) {
     return axios.get(`${API_BASE_URL}/Dashboard/summary`, {
       headers: getAuthHeaders(authData),

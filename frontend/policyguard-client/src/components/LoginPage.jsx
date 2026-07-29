@@ -5,6 +5,7 @@ function LoginPage({
   loading,
   error,
   successMessage,
+  isDemoLink,
 }) {
   const demoEmail = import.meta.env.VITE_DEMO_EMAIL?.trim();
 
@@ -32,7 +33,19 @@ function LoginPage({
           </p>
         </div>
 
-        {demoEmail && (
+        {isDemoLink ? (
+          <aside className="demo-access-card demo-link-ready">
+            <div>
+              <p className="eyebrow">Resume Demo</p>
+              <h3>Your Reviewer access is ready</h3>
+              <p>
+                The credentials are prepared for this portfolio session. Press
+                Sign In to explore the working application with
+                least-privilege Reviewer access.
+              </p>
+            </div>
+          </aside>
+        ) : demoEmail ? (
           <aside className="demo-access-card">
             <div>
               <p className="eyebrow">Portfolio Demo</p>
@@ -47,7 +60,7 @@ function LoginPage({
               Use {demoEmail}
             </button>
           </aside>
-        )}
+        ) : null}
 
         {error && <div className="error-banner">{error}</div>}
         {successMessage && <div className="success-banner">{successMessage}</div>}
@@ -59,6 +72,7 @@ function LoginPage({
               type="email"
               autoComplete="username"
               required
+              readOnly={isDemoLink}
               value={loginForm.email}
               onChange={(event) =>
                 setLoginForm({ ...loginForm, email: event.target.value })
@@ -72,6 +86,7 @@ function LoginPage({
               type="password"
               autoComplete="current-password"
               required
+              readOnly={isDemoLink}
               value={loginForm.password}
               onChange={(event) =>
                 setLoginForm({ ...loginForm, password: event.target.value })
@@ -80,7 +95,11 @@ function LoginPage({
           </label>
 
           <button className="primary-btn full-width" disabled={loading}>
-            {loading ? "Signing In..." : "Sign In"}
+            {loading
+              ? "Signing In..."
+              : isDemoLink
+                ? "Sign In to Live Demo"
+                : "Sign In"}
           </button>
         </form>
       </section>

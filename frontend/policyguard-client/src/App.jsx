@@ -21,6 +21,23 @@ const emptyChecklistItem = {
   weight: 10,
 };
 
+const DEMO_PASSWORD_MASK = "portfolio-demo-access";
+
+function readDemoAccessToken() {
+  const fragment = window.location.hash.replace(/^#/, "");
+  const accessToken = new URLSearchParams(fragment).get("demo")?.trim() || "";
+
+  if (accessToken) {
+    window.history.replaceState(
+      null,
+      document.title,
+      `${window.location.pathname}${window.location.search}`
+    );
+  }
+
+  return accessToken;
+}
+
 function App() {
   const [activePage, setActivePage] = useState("dashboard");
   const [dashboard, setDashboard] = useState(null);
@@ -37,10 +54,12 @@ function App() {
   const [isEditingChecklist, setIsEditingChecklist] = useState(false);
 
   const [currentUser, setCurrentUser] = useState(() => getSavedAuth());
+  const [demoAccessToken, setDemoAccessToken] = useState(readDemoAccessToken);
+  const demoEmail = import.meta.env.VITE_DEMO_EMAIL?.trim() || "";
 
   const [loginForm, setLoginForm] = useState({
-    email: "",
-    password: "",
+    email: demoAccessToken ? demoEmail : "",
+    password: demoAccessToken ? DEMO_PASSWORD_MASK : "",
   });
 
   const [reviewForm, setReviewForm] = useState({
@@ -103,12 +122,15 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await apiClient.login({
-        email: loginForm.email,
-        password: loginForm.password,
-      });
+      const response = demoAccessToken
+        ? await apiClient.demoLogin(demoAccessToken)
+        : await apiClient.login({
+            email: loginForm.email,
+            password: loginForm.password,
+          });
 
       const authData = response.data;
+      setDemoAccessToken("");
       saveAuth(authData);
       setCurrentUser(authData);
       setActivePage("dashboard");
@@ -134,10 +156,10 @@ function App() {
     setLastAuditRefreshAt(null);
     setIsEditingChecklist(false);
     setActivePage("dashboard");
-    setLoginForm({
-      email: "",
-      password: "",
-    });
+      setLoginForm({
+        email: "",
+        password: "",
+      });
   }
 
   async function loadInitialData(user = currentUser) {
@@ -729,6 +751,7 @@ function App() {
         loading={loading}
         error={error}
         successMessage={successMessage}
+        isDemoLink={Boolean(demoAccessToken)}
       />
     );
   }

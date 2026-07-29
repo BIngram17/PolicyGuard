@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -70,32 +72,36 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid email or password." });
         }
 
-        var expirationMinutesRaw = _configuration["Jwt:ExpirationMinutes"];
-        var expirationMinutes = int.TryParse(expirationMinutesRaw, out var parsedMinutes)
-            ? parsedMinutes
-            : 480;
+        return await CreateLoginResponseAsync(user, $"Role: {user.Role}");
+    }
 
-        var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
-        var token = _jwtTokenService.GenerateToken(user, expiresAt);
+    [HttpPost("demo-login")]
+    public async Task<IActionResult> DemoLogin([FromBody] DemoLoginRequest request)
+    {
+        var demoEnabled = _configuration.GetValue<bool>("PortfolioDemo:Enabled");
+        var configuredToken = _configuration["PortfolioDemo:AccessToken"];
+        var demoEmail = _configuration["PortfolioDemo:Email"]?.Trim().ToLowerInvariant();
 
-        await _auditLogService.LogAsync(
-            action: "LOGIN_SUCCESS",
-            entityType: "AppUser",
-            entityId: user.Id,
-            summary: $"User logged in: {user.Email}",
-            details: $"Role: {user.Role}",
-            performedBy: user.Email
-        );
-
-        return Ok(new AuthResponse
+        if (!demoEnabled ||
+            string.IsNullOrWhiteSpace(configuredToken) ||
+            string.IsNullOrWhiteSpace(demoEmail) ||
+            string.IsNullOrWhiteSpace(request.AccessToken) ||
+            !TokensMatch(request.AccessToken, configuredToken))
         {
-            Token = token,
-            UserId = user.Id,
-            FullName = user.FullName,
-            Email = user.Email,
-            Role = user.Role,
-            ExpiresAt = expiresAt
-        });
+            return Unauthorized(new { message = "This demo link is invalid or has expired." });
+        }
+
+        var user = await _context.AppUsers
+            .FirstOrDefaultAsync(appUser => appUser.Email.ToLower() == demoEmail);
+
+        if (user == null || !user.IsActive || user.Role != "Reviewer")
+        {
+            return Unauthorized(new { message = "Demo access is temporarily unavailable." });
+        }
+
+        return await CreateLoginResponseAsync(
+            user,
+            "Role: Reviewer; Method: Portfolio demo link.");
     }
 
     [HttpPost("register")]
@@ -168,5 +174,43 @@ public class AuthController : ControllerBase
                 user.CreatedAt
             }
         );
+    }
+
+    private async Task<IActionResult> CreateLoginResponseAsync(AppUser user, string auditDetails)
+    {
+        var expirationMinutesRaw = _configuration["Jwt:ExpirationMinutes"];
+        var expirationMinutes = int.TryParse(expirationMinutesRaw, out var parsedMinutes)
+            ? parsedMinutes
+            : 480;
+
+        var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
+        var token = _jwtTokenService.GenerateToken(user, expiresAt);
+
+        await _auditLogService.LogAsync(
+            action: "LOGIN_SUCCESS",
+            entityType: "AppUser",
+            entityId: user.Id,
+            summary: $"User logged in: {user.Email}",
+            details: auditDetails,
+            performedBy: user.Email
+        );
+
+        return Ok(new AuthResponse
+        {
+            Token = token,
+            UserId = user.Id,
+            FullName = user.FullName,
+            Email = user.Email,
+            Role = user.Role,
+            ExpiresAt = expiresAt
+        });
+    }
+
+    private static bool TokensMatch(string suppliedToken, string configuredToken)
+    {
+        var suppliedHash = SHA256.HashData(Encoding.UTF8.GetBytes(suppliedToken));
+        var configuredHash = SHA256.HashData(Encoding.UTF8.GetBytes(configuredToken));
+
+        return CryptographicOperations.FixedTimeEquals(suppliedHash, configuredHash);
     }
 }

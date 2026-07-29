@@ -42,6 +42,7 @@ PortfolioDemo__Enabled=true
 PortfolioDemo__Email=portfolio-reviewer@your-domain.example
 PortfolioDemo__FullName=Portfolio Reviewer
 PortfolioDemo__Password=<unique-random-password-at-least-12-characters>
+PortfolioDemo__AccessToken=<unique-random-url-safe-token>
 ```
 
 Add the SQL connection string under **Connection strings** using the name `DefaultConnection`:
@@ -56,6 +57,8 @@ The API creates or updates the portfolio demo account during startup. Its role i
 always forced to `Reviewer`, which allows recruiters to exercise the core workflow
 without user administration or destructive access. Changing
 `PortfolioDemo__Password` and restarting the App Service rotates the password.
+`PortfolioDemo__AccessToken` enables a resume link that exchanges an opaque token
+for a Reviewer session without exposing the account password.
 
 ## Frontend Environment Variable
 
@@ -156,6 +159,18 @@ Use one shared Reviewer account for short recruiting campaigns, rotate its
 password between campaigns, and never share the Admin account. To revoke access
 immediately, set `PortfolioDemo__Enabled=false` and deactivate the account in the
 database, or rotate `PortfolioDemo__Password` and restart the API.
+
+For a one-click resume experience, use this link format:
+
+```text
+https://<your-static-web-app-url>/#demo=<PortfolioDemo__AccessToken>
+```
+
+The browser removes the fragment from the address bar before submitting it to
+`/api/Auth/demo-login`. The regular login page remains visible with prepared,
+read-only fields, and the visitor presses **Sign In to Live Demo**. Treat the
+complete link as a credential: share it only where intended and rotate
+`PortfolioDemo__AccessToken` to revoke old resume links.
 
 ## Docker Build
 

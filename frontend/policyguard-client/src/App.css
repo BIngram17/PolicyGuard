@@ -1320,6 +1320,21 @@ textarea {
   background: #dbeafe;
 }
 
+.demo-link-ready {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.demo-link-ready .eyebrow {
+  color: #15803d;
+}
+
+.login-form input[readonly] {
+  background: #f8fafc;
+  color: #475569;
+  cursor: default;
+}
+
 .demo-users {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
